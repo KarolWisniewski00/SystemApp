@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "347174244212",
+    "firebase_url": "https://system-dff-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "system-dff",
+    "storage_bucket": "system-dff.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:347174244212:android:b184f74b424f8d4f3d2621",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBl-fj3IDh-WYbfWuTZLtYYp0_XukKBZx8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
