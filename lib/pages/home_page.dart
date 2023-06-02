@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:app/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -13,9 +15,30 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final User? user = Auth().currentUser;
   int _currentIndex = 0;
+  final String apiUrl = 'http://10.0.2.2:8000';
+  var headers = {'Content-Type': 'application/json'};
 
   Future<void> signOut() async {
     await Auth().signOut();
+  }
+
+  Future<void> postData() async {
+    try {
+      var response = await http.post(
+        Uri.parse('$apiUrl/times/create/'),
+        body: json.encode({
+          "date": "",
+          "location": {"lat": "", "long": ""},
+          "photo": "",
+          "uid": user?.uid ?? ''
+        }),
+        headers: headers,
+      );
+      print('Status: ${response.statusCode}');
+      print('Body: ${response.body}');
+    } catch (error) {
+      print('Error: $error');
+    }
   }
 
   Widget _title() {
@@ -50,7 +73,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _workTimeButton() {
     return ElevatedButton(
-        onPressed: () {}, child: const Text('Wyślij czas pracy - ręcznie'));
+        onPressed: postData, child: const Text('Wyślij czas pracy - ręcznie'));
   }
 
   @override
@@ -96,9 +119,10 @@ class _HomePageState extends State<HomePage> {
     ];
     return Scaffold(
       appBar: AppBar(
-          title: Center(
-        child: _title(),
-      )),
+        title: Center(
+          child: _title(),
+        ),
+      ),
       body: body[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
