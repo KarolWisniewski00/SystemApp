@@ -39,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _title() {
-    return const Text('Firebase Auth');
+    return const Text('System');
   }
 
   Widget _entryField(
@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
     return ElevatedButton(
       onPressed:
           isLogin ? signInWithEmailAndPassword : createUserWithEmailAndPassword,
-      child: Text(isLogin ? 'Login' : 'Register'),
+      child: Text(isLogin ? 'Logowanie' : 'Rejestracja'),
     );
   }
 
@@ -79,8 +79,9 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _title(),
-      ),
+          title: Center(
+        child: _title(),
+      )),
       body: Container(
         height: double.infinity,
         width: double.infinity,
@@ -89,8 +90,8 @@ class _LoginPageState extends State<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _entryField('email', _controllerEmail),
-            _entryField('password', _controllerPassword),
+            _entryField('Email', _controllerEmail),
+            _entryField('Hasło', _controllerPassword),
             _errorMessage(),
             _submitButton(),
             _loginOrRegisterButton(),

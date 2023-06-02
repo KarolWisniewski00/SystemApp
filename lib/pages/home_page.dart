@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:app/auth.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -11,77 +11,52 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String locationMessage = 'Current location of the User';
-  late String lat;
-  late String long;
-
-  Future<Position> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied.');
-      }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request');
-    }
-    return await Geolocator.getCurrentPosition();
-  }
-
-  void _liveLocation() {
-    LocationSettings locationSettings = const LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 100,
-    );
-    Geolocator.getPositionStream(locationSettings: locationSettings)
-        .listen((Position position) {
-      lat = position.latitude.toString();
-      long = position.longitude.toString();
-      setState(() {
-        locationMessage = 'Latitude $lat, Longitude: $long';
-      });
-    });
-  }
-
   final User? user = Auth().currentUser;
+  int _currentIndex = 0;
 
   Future<void> signOut() async {
     await Auth().signOut();
   }
 
   Widget _title() {
-    return const Text('Firebase Auth');
+    return const Text('System');
+  }
+
+  Widget _qr_code() {
+    return Column(
+      children: [
+        const Text('Twój kod do mierzenia czasu pracy'),
+        const SizedBox(height: 20),
+        QrImage(
+          data: user?.uid ?? '',
+          version: QrVersions.auto,
+          size: 300.0,
+        ),
+      ],
+    );
   }
 
   Widget _userInfo() {
     return Column(
       children: [
         Text('Email: ${user?.email ?? 'Unknown'}'),
-        Text('User ID: ${user?.uid ?? 'Unknown'}'),
-        Text('Email Verified: ${user?.emailVerified ?? false}'),
-        Text(
-            'Last time sign in: ${user?.metadata.lastSignInTime ?? 'Unknown'}'),
       ],
     );
   }
 
   Widget _signOutButton() {
-    return ElevatedButton(onPressed: signOut, child: const Text('Sign Out'));
+    return ElevatedButton(onPressed: signOut, child: const Text('Wyloguj'));
+  }
+
+  Widget _workTimeButton() {
+    return ElevatedButton(
+        onPressed: () {}, child: const Text('Wyślij czas pracy - ręcznie'));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: _title(),
-      ),
-      body: Container(
+    List<Widget> body = [
+      Container(
         height: double.infinity,
         width: double.infinity,
         padding: const EdgeInsets.all(20),
@@ -89,33 +64,56 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'INFO',
-              textAlign: TextAlign.center,
-            ),
-            _userInfo(),
-            _signOutButton(),
-            Text(
-              locationMessage,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            ElevatedButton(
-                onPressed: () {
-                  _getCurrentLocation().then((value) {
-                    lat = '${value.latitude}';
-                    long = '${value.longitude}';
-                    setState(() {
-                      locationMessage = 'Latitude: $lat, Longitude: $long';
-                    });
-                    _liveLocation();
-                  });
-                },
-                child: const Text('Get Current Location'))
+            _qr_code(),
           ],
         ),
+      ),
+      Container(
+        height: double.infinity,
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            _workTimeButton(),
+          ],
+        ),
+      ),
+      Container(
+        height: double.infinity,
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            _userInfo(),
+            _signOutButton(),
+          ],
+        ),
+      ),
+    ];
+    return Scaffold(
+      appBar: AppBar(
+          title: Center(
+        child: _title(),
+      )),
+      body: body[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (int newIndex) {
+          setState(() {
+            _currentIndex = newIndex;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.qr_code_scanner_rounded), label: 'QR Code'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.access_alarm), label: 'Zmierz czas'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+        ],
       ),
     );
   }
