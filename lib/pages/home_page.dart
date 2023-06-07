@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl/intl.dart';
+import 'dart:async';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -17,6 +19,8 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   final String apiUrl = 'http://10.0.2.2:8000';
   var headers = {'Content-Type': 'application/json'};
+  late Timer _timer;
+  String? _currentTime;
 
   Future<void> signOut() async {
     await Auth().signOut();
@@ -27,7 +31,7 @@ class _HomePageState extends State<HomePage> {
       var response = await http.post(
         Uri.parse('$apiUrl/times/create/'),
         body: json.encode({
-          "date": "",
+          "date": DateTime.now().millisecondsSinceEpoch,
           "location": {"lat": "", "long": ""},
           "photo": "",
           "uid": user?.uid ?? ''
@@ -48,7 +52,7 @@ class _HomePageState extends State<HomePage> {
   Widget _qr_code() {
     return Column(
       children: [
-        const Text('Twój kod do mierzenia czasu pracy'),
+        const Text('Twój kod do mierzenia czasu pracy w KIOSK'),
         const SizedBox(height: 20),
         QrImage(
           data: user?.uid ?? '',
@@ -73,11 +77,21 @@ class _HomePageState extends State<HomePage> {
 
   Widget _workTimeButton() {
     return ElevatedButton(
-        onPressed: postData, child: const Text('Wyślij czas pracy - ręcznie'));
+        onPressed: postData, child: const Text('Zmierz czas pracy poza KIOSK'));
   }
 
   @override
   Widget build(BuildContext context) {
+    _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
+      setState(() {
+        _currentTime = DateFormat('dd.MM.yyyy kk:mm:ss').format(DateTime.now());
+      });
+    });
+    void dispose() {
+      _timer.cancel();
+      super.dispose();
+    }
+
     List<Widget> body = [
       Container(
         height: double.infinity,
@@ -99,6 +113,14 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            const Text('Mierzenie czasu pracy w poza KIOSK'),
+            Center(
+              child: Text(
+                _currentTime ?? '',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0),
+              ),
+            ),
             _workTimeButton(),
           ],
         ),
