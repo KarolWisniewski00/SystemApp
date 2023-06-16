@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'dart:async';
+import 'package:geolocator/geolocator.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -21,18 +22,42 @@ class _HomePageState extends State<HomePage> {
   var headers = {'Content-Type': 'application/json'};
   late Timer _timer;
   String? _currentTime;
+  late String lat;
+  late String long;
 
   Future<void> signOut() async {
     await Auth().signOut();
   }
 
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled');
+    }
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied!');
+    }
+    return await Geolocator.getCurrentPosition();
+  }
+
   Future<void> postData() async {
+    _getCurrentLocation().then((value) {
+      lat = '${value.latitude}';
+      long = '${value.longitude}';
+    },)
     try {
       var response = await http.post(
         Uri.parse('$apiUrl/times/create/'),
         body: json.encode({
           "date": DateTime.now().millisecondsSinceEpoch,
-          "location": {"lat": "", "long": ""},
+          "location": {"lat": "$lat", "long": "$long"},
           "photo": "",
           "uid": user?.uid ?? ''
         }),
