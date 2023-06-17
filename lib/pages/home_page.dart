@@ -18,12 +18,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final User? user = Auth().currentUser;
   int _currentIndex = 0;
-  final String apiUrl = 'http://10.0.2.2:8000';
+  final String apiUrl = 'http://vps-699e8f36.vps.ovh.net/api';
   var headers = {'Content-Type': 'application/json'};
   late Timer _timer;
   String? _currentTime;
-  late String lat;
-  late String long;
+  late String lat = '';
+  late String long = '';
 
   Future<void> signOut() async {
     await Auth().signOut();
@@ -48,13 +48,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> postData() async {
-    _getCurrentLocation().then((value) {
-      lat = '${value.latitude}';
-      long = '${value.longitude}';
-    },)
+    _getCurrentLocation().then(
+      (value) {
+        lat = '${value.latitude}';
+        long = '${value.longitude}';
+      },
+    );
     try {
       var response = await http.post(
-        Uri.parse('$apiUrl/times/create/'),
+        Uri.parse('${apiUrl}/times/create/'),
         body: json.encode({
           "date": DateTime.now().millisecondsSinceEpoch,
           "location": {"lat": "$lat", "long": "$long"},
@@ -65,6 +67,7 @@ class _HomePageState extends State<HomePage> {
       );
       print('Status: ${response.statusCode}');
       print('Body: ${response.body}');
+      print('URL: ${apiUrl}/times/create/');
     } catch (error) {
       print('Error: $error');
     }
